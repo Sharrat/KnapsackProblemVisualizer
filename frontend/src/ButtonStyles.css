@@ -1,0 +1,27 @@
+.custom-button {
+    background-color: lightyellow;
+    color: black;
+    margin:1px;
+    box-sizing: content-box;
+    border: 2px inset #000000;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    transition: background-color 0.3s;
+    font-weight: bold;
+}
+.custom-button-ok {
+    background-color: white;
+    color: black;
+    margin:1px;
+    box-sizing: content-box;
+    border: 2px inset #000000;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 15px;
+    transition: background-color 0.3s;
+}
+
+.custom-button:hover {
+    background-color: #2980b9;
+}
