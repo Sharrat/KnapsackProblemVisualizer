@@ -2,7 +2,9 @@ package student.pwr.KnapsackProblemVisualizer.controller;
 
 import org.springframework.web.bind.annotation.*;
 import student.pwr.KnapsackProblemVisualizer.Requests.KnapsackRequest;
-
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
 import java.util.*;
 
 @RestController
@@ -11,7 +13,15 @@ public class KnapsackController {
     @CrossOrigin(origins = "http://localhost:3000")
     @PostMapping("/knapsack01/dp")
     public Map<String, Object> knapsack01DP(@RequestBody KnapsackRequest request) {
-
+        MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
+        System.gc();
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        MemoryUsage beforeMemoryUse = memoryBean.getHeapMemoryUsage();
+        long beforeUsedMemory = beforeMemoryUse.getUsed();
         // Record the start time for performance measurement.
         long startTime = System.nanoTime();
 
@@ -52,12 +62,21 @@ public class KnapsackController {
 
         // Record the end time for performance measurement.
         long endTime = System.nanoTime();
-
+        System.gc();
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        MemoryUsage afterMemoryUse = memoryBean.getHeapMemoryUsage();
+        long afterUsedMemory = afterMemoryUse.getUsed();
+        long memoryUsedByAlgorithm = afterUsedMemory - beforeUsedMemory;
         // Prepare the result map to return.
         Map<String, Object> result = new HashMap<>();
         result.put("maxValue", dp[n][capacity]);            // Maximum possible value for given items and capacity.
         result.put("selectedItems", selectedItems);         // List of selected items' indices.
         result.put("exeTime", (endTime - startTime));       // Time taken to compute the solution.
+        result.put("memoryUsed",memoryUsedByAlgorithm);     // Memory used by the algorithm
 
         return result;
     }

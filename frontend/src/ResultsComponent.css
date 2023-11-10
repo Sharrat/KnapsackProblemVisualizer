@@ -1,0 +1,18 @@
+.carousel-container {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+.table-container {
+    transition: opacity 0.250s ease-in-out;
+    opacity: 1; /* Domyślnie ukryta */
+}
+
+.table-container.transitioning {
+    opacity: 0; /* Animacja znikania */
+}
+
+.table-container.appearing {
+    opacity: 1; /* Animacja pojawiania się */
+}
