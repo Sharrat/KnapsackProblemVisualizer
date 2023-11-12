@@ -25,9 +25,32 @@ function KnapsackInput() {
     const [minRandom, setMinRandom] = useState(1);
     const [maxRandom, setMaxRandom] = useState(100);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [isModalOpen2, setIsModalOpen2] = useState(false);
-    const [results, setResults] = useState(null);
     const [dpResults, setDpResults] = useState(null);
+    const [graResults, setGraResults] = useState(null);
+    const [bfResults, setBfResults] = useState(null);
+    const [genaResults, setGenaResults] = useState(null);
+    const [bnbResults, setBnbResults] = useState(null);
+    const [acoResults, setAcoResults] = useState(null);
+    const results = {
+        "Dynamic Programming": dpResults,
+        "Greedy Algorithm": graResults,
+        "Branch and Bound": bnbResults,
+        "Genetic Algorithm": genaResults,
+        "Ant Colony Optimization Algorithm": acoResults,
+        "Brute Force Algorithm": bfResults
+    };
+    const createChartData = (dataKey) => {
+        return selectedAlgorithms.reduce((acc, algorithm) => {
+            if (results[algorithm] && results[algorithm][dataKey] !== undefined) {
+                acc.push(results[algorithm][dataKey]);
+            } else {
+                acc.push(null);
+            }
+            return acc;
+        }, []);
+    };
     const [isButtonDisabled, setIsButtonDisabled] = useState(false);
     const [activeTableIndex, setActiveTableIndex] = useState(0);
     const [isTransitioning, setIsTransitioning] = useState(false);
@@ -37,72 +60,19 @@ function KnapsackInput() {
     const renderCircles = () => {
         return (
             <div style={{ textAlign: 'center', padding: '10px' }}>
-            <span
-                key={0}
-                style={{
-                    height: '10px',
-                    width: '10px',
-                    backgroundColor: activeTableIndex === 0 ? 'yellow' : 'white',
-                    borderRadius: '50%',
-                    display: 'inline-block',
-                    margin: '0 5px',
-                }}
-            />
-                <span
-                    key={1}
-                    style={{
-                        height: '10px',
-                        width: '10px',
-                        backgroundColor: activeTableIndex === 1 ? 'yellow' : 'white',
-                        borderRadius: '50%',
-                        display: 'inline-block',
-                        margin: '0 5px',
-                    }}
-                />
-                <span
-                    key={2}
-                    style={{
-                        height: '10px',
-                        width: '10px',
-                        backgroundColor: activeTableIndex === 2 ? 'yellow' : 'white',
-                        borderRadius: '50%',
-                        display: 'inline-block',
-                        margin: '0 5px',
-                    }}
-                />
-                <span
-                    key={3}
-                    style={{
-                        height: '10px',
-                        width: '10px',
-                        backgroundColor: activeTableIndex === 3 ? 'yellow' : 'white',
-                        borderRadius: '50%',
-                        display: 'inline-block',
-                        margin: '0 5px',
-                    }}
-                />
-                <span
-                    key={4}
-                    style={{
-                        height: '10px',
-                        width: '10px',
-                        backgroundColor: activeTableIndex === 4 ? 'yellow' : 'white',
-                        borderRadius: '50%',
-                        display: 'inline-block',
-                        margin: '0 5px',
-                    }}
-                />
-                <span
-                    key={5}
-                    style={{
-                        height: '10px',
-                        width: '10px',
-                        backgroundColor: activeTableIndex === 5 ? 'yellow' : 'white',
-                        borderRadius: '50%',
-                        display: 'inline-block',
-                        margin: '0 5px',
-                    }}
-                />
+                {selectedAlgorithms.map((_, index) => (
+                    <span
+                        key={index}
+                        style={{
+                            height: '10px',
+                            width: '10px',
+                            backgroundColor: activeTableIndex === index ? 'yellow' : 'white',
+                            borderRadius: '50%',
+                            display: 'inline-block',
+                            margin: '0 5px',
+                        }}
+                    />
+                ))}
             </div>
         );
     };
@@ -120,7 +90,7 @@ function KnapsackInput() {
         setIsTransitioning(true);
         setIsAppearing(false); // Rozpoczęcie animacji wygaszania
         setTimeout(() => {
-            setActiveTableIndex((prevIndex) => (prevIndex + 1) % 6);
+            setActiveTableIndex((prevIndex) => (prevIndex + 1) % selectedAlgorithms.length);
         }, 250);
         setTimeout(() => {
             setIsTransitioning(false);
@@ -132,7 +102,7 @@ function KnapsackInput() {
         setIsTransitioning(true);
         setIsAppearing(false); // Rozpoczęcie animacji wygaszania
         setTimeout(() => {
-            setActiveTableIndex((prevIndex) => (prevIndex - 1 + 6) % 6);
+            setActiveTableIndex((prevIndex) => (prevIndex - 1 + selectedAlgorithms.length) % selectedAlgorithms.length);
         }, 250);
         setTimeout(() => {
             setIsTransitioning(false);
@@ -188,7 +158,7 @@ function KnapsackInput() {
         datasets: [
             {
                 label: 'Max Value',
-                data: [dpResults?.maxValue || null,400,417,417,417,420],
+                data: createChartData('maxValue'),
                 backgroundColor:'lightyellow',
             },
         ],
@@ -198,7 +168,7 @@ function KnapsackInput() {
         datasets: [
             {
                 label: 'Processing time',
-                data: [dpResults?.exeTime || null,2,3,15,4,1],
+                data: createChartData('exeTime'),
                 backgroundColor:'lightyellow',
             },
         ],
@@ -208,7 +178,7 @@ function KnapsackInput() {
         datasets: [
             {
                 label: 'Memory used',
-                data: [dpResults?.memoryUsed || null,2,3,15,4,1],
+                data: createChartData('memoryUsed'),
                 backgroundColor:'lightyellow',
             },
         ],
@@ -221,6 +191,7 @@ function KnapsackInput() {
     function toggleModal() {
         setIsModalOpen(!isModalOpen);
     }
+
     function toggleModal2() {
         setIsModalOpen2(!isModalOpen2);
     }
@@ -229,16 +200,25 @@ function KnapsackInput() {
         updatedItems[index][key] = Number(value);
         setItems(updatedItems);
     }
-    function handleSubmit() {
-
+    function delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    async function handleSubmit() {
+        setDpResults(null);
+        setBfResults(null);
+        setBnbResults(null);
+        setAcoResults(null);
+        setGraResults(null);
+        setGenaResults(null);
+        setLoading(true);
         console.log('Items:', items);
         console.log('Capacity:', capacity);
 
         // Extracting weights and values from the items
         const weights = items.map(item => item.weight);
-        console.log('Weights',weights);
+        console.log('Weights', weights);
         const values = items.map(item => item.value);
-        console.log('values',values);
+        console.log('values', values);
 
         // Prepare data for POST request
         const data = {
@@ -246,104 +226,49 @@ function KnapsackInput() {
             weights: weights,
             capacity: capacity
         };
+        const algorithms = [
+            {name: "Dynamic Programming", endpoint: 'dp', setResult: setDpResults},
+            {name: "Brute Force Algorithm", endpoint: 'bf', setResult: setBfResults},
+            {name: "Greedy Algorithm", endpoint: 'gra', setResult: setGraResults},
+            {name: "Genetic Algorithm", endpoint: 'gena', setResult: setGenaResults},
+            {name: "Ant Colony Optimization Algorithm", endpoint: 'aco', setResult: setAcoResults},
+            {name: "Branch and Bound", endpoint: 'bnb', setResult: setBnbResults}
+        ];
+        const timeout = 5 * 60 * 1000;
+        const startTime = Date.now();
+        await axios.post('http://localhost:8080/knapsack01/dp', data)
+        await delay (5000)
+        for (const algorithm of algorithms) {
+            if (selectedAlgorithms.includes(algorithm.name)) {
+                console.log(`${algorithm.name} is selected.`);
 
-        // DP Algorithm
-        if (selectedAlgorithms.includes("Dynamic Programming")) {
-            console.log("Dynamic programming is selected.");
-            axios.post('http://localhost:8080/knapsack01/dp', data)
-                .then(response => {
-                    console.log("DP Results:", response.data);
+                try {
+                    const response = await axios.post(`http://localhost:8080/knapsack01/${algorithm.endpoint}`, data);
+                    console.log(`${algorithm.name} Results:`, response.data);
                     const reversedItems = [...response.data.selectedItems].reverse();
-                    setDpResults({
+                    algorithm.setResult({
                         ...response.data,
                         selectedItems: reversedItems
                     });
-                })
-                .catch(error => {
-                    console.error("Error fetching DP results", error);
-                });
+
+                    if (Date.now() - startTime > timeout) {
+                        throw new Error("Timeout reached");
+                    }
+
+                    await delay(5000); // 5-second delay
+                } catch (error) {
+                    console.error(`Error fetching ${algorithm.name} results`, error);
+                    // Handle error
+                    break; // Stop further processing
+                }
+            }
         }
-        // DP Algorithm
-        if (selectedAlgorithms.includes("Brute Force Algorithm")) {
-            console.log("Brute force is selected.");
-            axios.post('http://localhost:8080/knapsack01/bf', data)
-                .then(response => {
-                    console.log("BF Results:", response.data);
-                    const reversedItems = [...response.data.selectedItems].reverse();
-                    setBfResults({
-                        ...response.data,
-                        selectedItems: reversedItems
-                    });
-                })
-                .catch(error => {
-                    console.error("Error fetching BF results", error);
-                });
-        }
-        if (selectedAlgorithms.includes("Greedy Algorithm")) {
-            console.log("Greedy algorithm is selected.");
-            axios.post('http://localhost:8080/knapsack01/gra', data)
-                .then(response => {
-                    console.log("GRA Results:", response.data);
-                    const reversedItems = [...response.data.selectedItems].reverse();
-                    setGraResults({
-                        ...response.data,
-                        selectedItems: reversedItems
-                    });
-                })
-                .catch(error => {
-                    console.error("Error fetching GRA results", error);
-                });
-        }
-        if (selectedAlgorithms.includes("Genetic Algorithm")) {
-            console.log("Genetic algorithm is selected.");
-            axios.post('http://localhost:8080/knapsack01/gena', data)
-                .then(response => {
-                    console.log("GENA Results:", response.data);
-                    const reversedItems = [...response.data.selectedItems].reverse();
-                    setGenaResults({
-                        ...response.data,
-                        selectedItems: reversedItems
-                    });
-                })
-                .catch(error => {
-                    console.error("Error fetching GENA results", error);
-                });
-        }
-        if (selectedAlgorithms.includes("Ant Colony Optimization Algorithm")) {
-            console.log("ACO is selected.");
-            axios.post('http://localhost:8080/knapsack01/aco', data)
-                .then(response => {
-                    console.log("ACO Results:", response.data);
-                    const reversedItems = [...response.data.selectedItems].reverse();
-                    setAcoResults({
-                        ...response.data,
-                        selectedItems: reversedItems
-                    });
-                })
-                .catch(error => {
-                    console.error("Error fetching ACO results", error);
-                });
-        }
-        if (selectedAlgorithms.includes("Branch and Bound")) {
-            console.log("Branch and Bound is selected.");
-            axios.post('http://localhost:8080/knapsack01/bnb', data)
-                .then(response => {
-                    console.log("BNB Results:", response.data);
-                    const reversedItems = [...response.data.selectedItems].reverse();
-                    setBnbResults({
-                        ...response.data,
-                        selectedItems: reversedItems
-                    });
-                })
-                .catch(error => {
-                    console.error("Error fetching BNB results", error);
-                });
-        }
+        setLoading(false);
         setIsSubmitted(true);
         // Wyłącz przycisk
         setIsButtonDisabled(true);
 
-        // Ponownie włącz przycisk po 200 ms
+        // Ponownie włącz przycisk po 400 ms
         setTimeout(() => {
             setIsButtonDisabled(false);
         }, 400);
@@ -442,6 +367,33 @@ function KnapsackInput() {
                                 />
                                 <br></br>
                                 <button onClick={toggleModal}>Confirm</button>
+                            </div>
+                        </div>
+
+                    )
+
+                }
+                {
+                    loading && (
+                        <div style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: 'rgba(0,0,0,0.3)',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center'
+                        }}>
+                            <div style={{
+                                backgroundColor: 'white',
+                                padding: '20px',
+                                borderRadius: '10px',
+                                width: '300px',
+                                textAlign: 'center'
+                            }}>
+                                <h3>Processing data...</h3>
                             </div>
                         </div>
 
@@ -560,60 +512,18 @@ function KnapsackInput() {
                         <div className="carousel-container" style={{ display: 'flex', backgroundColor: 'grey' }}>
 
                         <div id={'1'} style={{ flex: '1 1 auto', overflowY: 'auto', overflowX: 'hidden', padding: '0px' }}>
-                            {/* Tabela dla Dynamic Programming */}
-                            {activeTableIndex === 0 && dpResults && ( <div style={{display:'flex', margin:'auto', padding:'auto'}}>
-                                    <button onClick={handlePrev} className="custom-button" style={{alignSelf:"center",height:"50px", width:"50px", fontSize:"25px"}}>←</button>
-                                    <div className={`table-container ${isTransitioning ? 'transitioning' : ''} ${isAppearing ? 'appearing' : ''}`} style={{border:'2px solid black',margin:'0',width:'100%', borderRadius:'0', backgroundColor:'lightgrey'}}>
-                                        <KnapsackTable title="Dynamic Programming" data={dpResults} />
+                            {selectedAlgorithms.map((algorithm, index) => {
+                                const resultsMapped = results[algorithm];
+                                return resultsMapped && activeTableIndex === index && (
+                                    <div key={algorithm} style={{display:'flex', margin:'auto'}}>
+                                        <button onClick={handlePrev} className="custom-button" style={{alignSelf:"center",height:"50px", width:"50px", fontSize:"25px"}}>←</button>
+                                        <div className={`table-container ${isTransitioning ? 'transitioning' : ''} ${isAppearing ? 'appearing' : ''}`} style={{border:'2px solid black',margin:'0',width:'100%', borderRadius:'0', backgroundColor:'lightgrey'}}>
+                                            <KnapsackTable title={algorithm} data={resultsMapped} />
+                                        </div>
+                                        <button onClick={handleNext} className="custom-button" style={{alignSelf:"center",height:"50px", width:"50px",fontSize:"25px"}}>→</button>
                                     </div>
-                                    <button onClick={handleNext} className="custom-button" style={{alignSelf:"center",height:"50px", width:"50px",fontSize:"25px"}}>→</button>
-                                </div>
-                            )}
-                            {/* Tabela dla Brute Force */}
-                            {activeTableIndex === 1 && dpResults && ( <div style={{display:'flex', margin:'auto'}}>
-                                    <button onClick={handlePrev} className="custom-button" style={{alignSelf:"center",height:"50px", width:"50px", fontSize:"25px"}}>←</button>
-                                    <div className={`table-container ${isTransitioning ? 'transitioning' : ''} ${isAppearing ? 'appearing' : ''}`} style={{border:'2px solid black',margin:'0',width:'100%', borderRadius:'0', backgroundColor:'lightgrey'}}>
-                                        <KnapsackTable title="Brute force" data={dpResults} />
-                                    </div>
-                                    <button onClick={handleNext} className="custom-button" style={{alignSelf:"center",height:"50px", width:"50px",fontSize:"25px"}}>→</button>
-                                </div>
-                            )}
-                            {/* Tabela dla Breach&Bound */}
-                            {activeTableIndex === 2 && dpResults && ( <div style={{display:'flex', margin:'auto'}}>
-                                    <button onClick={handlePrev} className="custom-button" style={{alignSelf:"center",height:"50px", width:"50px", fontSize:"25px"}}>←</button>
-                                    <div className={`table-container ${isTransitioning ? 'transitioning' : ''} ${isAppearing ? 'appearing' : ''}`} style={{border:'2px solid black',margin:'0',width:'100%', borderRadius:'0', backgroundColor:'lightgrey'}}>
-                                        <KnapsackTable title="Breach&Bound" data={dpResults} />
-                                    </div>
-                                    <button onClick={handleNext} className="custom-button" style={{alignSelf:"center",height:"50px", width:"50px",fontSize:"25px"}}>→</button>
-                                </div>
-                            )}
-                            {/* Tabela dla Ant Colony Optimization */}
-                            {activeTableIndex === 3 && dpResults && ( <div style={{display:'flex', margin:'auto'}}>
-                                    <button onClick={handlePrev} className="custom-button" style={{alignSelf:"center",height:"50px", width:"50px", fontSize:"25px"}}>←</button>
-                                    <div className={`table-container ${isTransitioning ? 'transitioning' : ''} ${isAppearing ? 'appearing' : ''}`} style={{border:'2px solid black',margin:'0',width:'100%', borderRadius:'0', backgroundColor:'lightgrey'}}>
-                                        <KnapsackTable title="Ant Colony Optimization" data={dpResults} />
-                                    </div>
-                                    <button onClick={handleNext} className="custom-button" style={{alignSelf:"center",height:"50px", width:"50px",fontSize:"25px"}}>→</button>
-                                </div>
-                            )}
-                            {/* Tabela dla Greedy Algorithm */}
-                            {activeTableIndex === 4 && dpResults && ( <div style={{display:'flex', margin:'auto'}}>
-                                    <button onClick={handlePrev} className="custom-button" style={{alignSelf:"center",height:"50px", width:"50px", fontSize:"25px"}}>←</button>
-                                    <div className={`table-container ${isTransitioning ? 'transitioning' : ''} ${isAppearing ? 'appearing' : ''}`} style={{border:'2px solid black',margin:'0',width:'100%', borderRadius:'0', backgroundColor:'lightgrey'}}>
-                                        <KnapsackTable title="Greedy Algorithm" data={dpResults} />
-                                    </div>
-                                    <button onClick={handleNext} className="custom-button" style={{alignSelf:"center",height:"50px", width:"50px",fontSize:"25px"}}>→</button>
-                                </div>
-                            )}
-                            {/* Tabela dla Genetic Algorithm */}
-                            {activeTableIndex === 5 && dpResults && ( <div style={{display:'flex', margin:'auto'}}>
-                                    <button onClick={handlePrev} className="custom-button" style={{alignSelf:"center",height:"50px", width:"50px", fontSize:"25px"}}>←</button>
-                                    <div className={`table-container ${isTransitioning ? 'transitioning' : ''} ${isAppearing ? 'appearing' : ''}`} style={{border:'2px solid black',margin:'0',width:'100%', borderRadius:'0', backgroundColor:'lightgrey'}}>
-                                        <KnapsackTable title="Genetic Algorithm" data={dpResults} />
-                                    </div>
-                                    <button onClick={handleNext} className="custom-button" style={{alignSelf:"center",height:"50px", width:"50px",fontSize:"25px"}}>→</button>
-                                </div>
-                            )}
+                                );
+                            })}
                         </div>
                     </div>
                         {renderCircles()}
