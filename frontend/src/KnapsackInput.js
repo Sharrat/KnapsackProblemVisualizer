@@ -10,7 +10,7 @@ import { BarElement,  CategoryScale,Chart as ChartJS,Legend, LinearScale,Title, 
 import KnapsackTable from "./KnapsackTable";
 function KnapsackInput() {
     ChartJS.register(CategoryScale, LinearScale, BarElement,Title,Tooltip,Legend);
-    const allAlgorithms = ["Dynamic Programming", "Greedy Algorithm", "Breach&Bound", "Genetic Algorithm", "Ant Colony Optimization Algorithm", "Brute Force Algorithm"];
+    const allAlgorithms = ["Dynamic Programming", "Greedy Algorithm", "Branch and Bound", "Genetic Algorithm", "Ant Colony Optimization Algorithm", "Brute Force Algorithm"];
     const [selectedAlgorithms, setSelectedAlgorithms] = useState([...allAlgorithms]);
     const handleCheckboxChange = (algorithm) => {
         if (selectedAlgorithms.includes(algorithm)) {
@@ -249,7 +249,7 @@ function KnapsackInput() {
 
         // DP Algorithm
         if (selectedAlgorithms.includes("Dynamic Programming")) {
-            console.log("Dynamic programming jest wybrany.");
+            console.log("Dynamic programming is selected.");
             axios.post('http://localhost:8080/knapsack01/dp', data)
                 .then(response => {
                     console.log("DP Results:", response.data);
@@ -261,6 +261,82 @@ function KnapsackInput() {
                 })
                 .catch(error => {
                     console.error("Error fetching DP results", error);
+                });
+        }
+        // DP Algorithm
+        if (selectedAlgorithms.includes("Brute Force Algorithm")) {
+            console.log("Brute force is selected.");
+            axios.post('http://localhost:8080/knapsack01/bf', data)
+                .then(response => {
+                    console.log("BF Results:", response.data);
+                    const reversedItems = [...response.data.selectedItems].reverse();
+                    setBfResults({
+                        ...response.data,
+                        selectedItems: reversedItems
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching BF results", error);
+                });
+        }
+        if (selectedAlgorithms.includes("Greedy Algorithm")) {
+            console.log("Greedy algorithm is selected.");
+            axios.post('http://localhost:8080/knapsack01/gra', data)
+                .then(response => {
+                    console.log("GRA Results:", response.data);
+                    const reversedItems = [...response.data.selectedItems].reverse();
+                    setGraResults({
+                        ...response.data,
+                        selectedItems: reversedItems
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching GRA results", error);
+                });
+        }
+        if (selectedAlgorithms.includes("Genetic Algorithm")) {
+            console.log("Genetic algorithm is selected.");
+            axios.post('http://localhost:8080/knapsack01/gena', data)
+                .then(response => {
+                    console.log("GENA Results:", response.data);
+                    const reversedItems = [...response.data.selectedItems].reverse();
+                    setGenaResults({
+                        ...response.data,
+                        selectedItems: reversedItems
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching GENA results", error);
+                });
+        }
+        if (selectedAlgorithms.includes("Ant Colony Optimization Algorithm")) {
+            console.log("ACO is selected.");
+            axios.post('http://localhost:8080/knapsack01/aco', data)
+                .then(response => {
+                    console.log("ACO Results:", response.data);
+                    const reversedItems = [...response.data.selectedItems].reverse();
+                    setAcoResults({
+                        ...response.data,
+                        selectedItems: reversedItems
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching ACO results", error);
+                });
+        }
+        if (selectedAlgorithms.includes("Branch and Bound")) {
+            console.log("Branch and Bound is selected.");
+            axios.post('http://localhost:8080/knapsack01/bnb', data)
+                .then(response => {
+                    console.log("BNB Results:", response.data);
+                    const reversedItems = [...response.data.selectedItems].reverse();
+                    setBnbResults({
+                        ...response.data,
+                        selectedItems: reversedItems
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching BNB results", error);
                 });
         }
         setIsSubmitted(true);
