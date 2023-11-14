@@ -4,22 +4,38 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Node {
+    // Upper Bound: Best case
+    // (Fractional Knapsack)
+    public float ub;
 
-    int level;      // Level in the state-space tree
-    int profit;     // Profit accumulated so far
-    int weight;     // Weight accumulated so far
-    int bound;      // Upper bound on profit
-    List<Integer> itemsInKnapsack;  // Items in the knapsack for this node
+    // Lower Bound: Worst case
+    // (0/1)
+    public float lb;
 
-    public Node() {
-        this.itemsInKnapsack = new ArrayList<>();
-    }
+    // Level of the node in
+    // the decision tree
+    public int level;
 
-    public Node(Node other) {
-        this.level = other.level;
-        this.profit = other.profit;
-        this.weight = other.weight;
-        this.bound = other.bound;
-        this.itemsInKnapsack = new ArrayList<>(other.itemsInKnapsack);
+    // Stores if the current
+    // item is selected or not
+    public boolean flag;
+
+    // Total Value: Stores the
+    // sum of the values of the
+    // items included
+    public float tv;
+
+    // Total Weight: Stores the sum of
+    // the weights of included items
+    public float tw;
+    public Node() {}
+    public Node(Node cpy)
+    {
+        this.tv = cpy.tv;
+        this.tw = cpy.tw;
+        this.ub = cpy.ub;
+        this.lb = cpy.lb;
+        this.level = cpy.level;
+        this.flag = cpy.flag;
     }
 }

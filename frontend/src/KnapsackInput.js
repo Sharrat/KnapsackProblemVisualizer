@@ -484,7 +484,7 @@ function KnapsackInput() {
                             overflowX: 'hidden',
                             boxSizing: 'border-box',
                             padding: '0px',
-                            maxHeight: 'calc(100vh - 50px - 200px)',
+                            maxHeight: 'calc(100vh - 50px - 250px)',
                             margin: '0px'}}>
                         {items.map((item, index) => (
                             <div key={index} style={{borderRadius: '52px',boxSizing:'border-box',margin: '10px auto', border: '2px solid #000', width: '50%', textAlign:"center", backgroundColor: 'lightgrey',paddingBottom:'10px'}}>
