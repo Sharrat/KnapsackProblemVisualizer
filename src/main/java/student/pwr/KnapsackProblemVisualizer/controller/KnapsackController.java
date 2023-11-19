@@ -1,11 +1,11 @@
 package student.pwr.KnapsackProblemVisualizer.controller;
 
 import org.springframework.web.bind.annotation.*;
+import student.pwr.KnapsackProblemVisualizer.Requests.AcoRequest;
+import student.pwr.KnapsackProblemVisualizer.Requests.GenaRequest;
 import student.pwr.KnapsackProblemVisualizer.Requests.KnapsackRequest;
-import student.pwr.KnapsackProblemVisualizer.util.Item;
-import student.pwr.KnapsackProblemVisualizer.util.Node;
-import student.pwr.KnapsackProblemVisualizer.util.sortByC;
-import student.pwr.KnapsackProblemVisualizer.util.sortByRatio;
+import student.pwr.KnapsackProblemVisualizer.util.*;
+
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
@@ -64,8 +64,6 @@ public class KnapsackController {
                 w = w - weights[i - 1];
             }
         }
-
-        // Record the end time for performance measurement.
         long endTime = System.nanoTime();
         System.gc();
         try {
@@ -126,7 +124,7 @@ public class KnapsackController {
             if (capacity >= weight) {
                 capacity -= weight;
                 maxValue += (int) item[0];
-                selectedItems.add((int) item[2]);
+                selectedItems.add((int) item[2]+1);
             }
         }
 
@@ -141,11 +139,11 @@ public class KnapsackController {
         MemoryUsage afterMemoryUse = memoryBean.getHeapMemoryUsage();
         long afterUsedMemory = afterMemoryUse.getUsed();
         long memoryUsedByAlgorithm = afterUsedMemory - beforeUsedMemory;
-
+        Collections.sort(selectedItems);
         // Prepare the result map to return.
         Map<String, Object> result = new HashMap<>();
         result.put("maxValue", maxValue);                  // Maximum possible value for given items and capacity.
-        result.put("selectedItems", selectedItems);       // List of selected items' indices.
+        result.put("selectedItems", selectedItems.reversed());       // List of selected items' indices.
         result.put("exeTime", (endTime - startTime));     // Time taken to compute the solution.
         result.put("memoryUsed", memoryUsedByAlgorithm);  // Memory used by the algorithm
 
@@ -153,55 +151,50 @@ public class KnapsackController {
     }
     @CrossOrigin(origins = "http://localhost:3000")
     @PostMapping("/knapsack01/gena")
-    public Map<String, Object> knapsack01GENA(@RequestBody KnapsackRequest request) {
+    public Map<String, Object> knapsack01GENA(@RequestBody GenaRequest request) {
         MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
         System.gc();
         try {
-            Thread.sleep(100);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
         MemoryUsage beforeMemoryUse = memoryBean.getHeapMemoryUsage();
         long beforeUsedMemory = beforeMemoryUse.getUsed();
+
         // Record the start time for performance measurement.
         long startTime = System.nanoTime();
-
-        // Extract values, weights, and capacity from the request.
         int[] values = request.getValues();
         int[] weights = request.getWeights();
         int capacity = request.getCapacity();
-        int n = values.length;
 
-        // Initialize the dynamic programming table.
-        int[][] dp = new int[n + 1][capacity + 1];
+        // Initialize the genetic algorithm parameters.
+        int numberOfItems = values.length;
+        int populationSize = request.getPopSize();
+        int maxGenerations = request.getMaxGen();
+        double crossoverRate = request.getCrossRate();
+        double mutationRate = request.getMutRate();
+
+        // Create a GeneticAlgorithmOptimizer instance.
+        GeneticAlgorithmOptimizer optimizer = new GeneticAlgorithmOptimizer(
+                numberOfItems, capacity, values, weights, populationSize, maxGenerations, crossoverRate, mutationRate
+        );
+        // Run the genetic algorithm to find the best solution.
+        List<Integer> bestSolution = optimizer.optimize();
+        int totalValue = 0;
+        for (int i = 0; i < bestSolution.size(); i++) {
+            if (bestSolution.get(i) == 1) {
+                totalValue += values[i];
+            }
+        }
         List<Integer> selectedItems = new ArrayList<>();
-
-        // Build the dynamic programming table.
-        for (int i = 0; i <= n; i++) {
-            for (int w = 0; w <= capacity; w++) {
-                if (i == 0 || w == 0)
-                    // Base case: no items or zero capacity.
-                    dp[i][w] = 0;
-                else if (weights[i - 1] <= w)
-                    // Current item can be included. Check for maximum value by including or excluding it.
-                    dp[i][w] = Math.max(values[i - 1] + dp[i - 1][w - weights[i - 1]], dp[i - 1][w]);
-                else
-                    // Current item cannot be included as it exceeds current capacity.
-                    dp[i][w] = dp[i - 1][w];
+        for(int j=1;j<=bestSolution.size();j++)
+        {
+            if(bestSolution.get(j-1)==1)
+            {
+                selectedItems.add(j);
             }
         }
-
-        // Backtrack through the dynamic programming table to find selected items.
-        int w = capacity;
-        for (int i = n; i > 0 && w > 0; i--) {
-            if (dp[i][w] != dp[i - 1][w]) {
-                // This item was included in the optimal solution.
-                selectedItems.add(i);
-                w = w - weights[i - 1];
-            }
-        }
-
-        // Record the end time for performance measurement.
         long endTime = System.nanoTime();
         System.gc();
         try {
@@ -212,27 +205,26 @@ public class KnapsackController {
         MemoryUsage afterMemoryUse = memoryBean.getHeapMemoryUsage();
         long afterUsedMemory = afterMemoryUse.getUsed();
         long memoryUsedByAlgorithm = afterUsedMemory - beforeUsedMemory;
-        // Prepare the result map to return.
         Map<String, Object> result = new HashMap<>();
-        result.put("maxValue", dp[n][capacity]);            // Maximum possible value for given items and capacity.
-        result.put("selectedItems", selectedItems);         // List of selected items' indices.
-        result.put("exeTime", (endTime - startTime));       // Time taken to compute the solution.
-        result.put("memoryUsed",memoryUsedByAlgorithm);     // Memory used by the algorithm
-
+        result.put("maxValue", totalValue); // Maximum possible value for given items and capacity.
+        result.put("selectedItems", selectedItems.reversed());               // List of selected items' indices.
+        result.put("exeTime", (endTime - startTime));           // Time taken to compute the solution.
+        result.put("memoryUsed", memoryUsedByAlgorithm);  // Memory used by the algorithm
         return result;
     }
     @CrossOrigin(origins = "http://localhost:3000")
     @PostMapping("/knapsack01/aco")
-    public Map<String, Object> knapsack01ACO(@RequestBody KnapsackRequest request) {
+    public Map<String, Object> knapsack01ACO(@RequestBody AcoRequest request) {
         MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
         System.gc();
         try {
-            Thread.sleep(100);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
         MemoryUsage beforeMemoryUse = memoryBean.getHeapMemoryUsage();
         long beforeUsedMemory = beforeMemoryUse.getUsed();
+
         // Record the start time for performance measurement.
         long startTime = System.nanoTime();
 
@@ -242,37 +234,21 @@ public class KnapsackController {
         int capacity = request.getCapacity();
         int n = values.length;
 
-        // Initialize the dynamic programming table.
-        int[][] dp = new int[n + 1][capacity + 1];
-        List<Integer> selectedItems = new ArrayList<>();
-
-        // Build the dynamic programming table.
-        for (int i = 0; i <= n; i++) {
-            for (int w = 0; w <= capacity; w++) {
-                if (i == 0 || w == 0)
-                    // Base case: no items or zero capacity.
-                    dp[i][w] = 0;
-                else if (weights[i - 1] <= w)
-                    // Current item can be included. Check for maximum value by including or excluding it.
-                    dp[i][w] = Math.max(values[i - 1] + dp[i - 1][w - weights[i - 1]], dp[i - 1][w]);
-                else
-                    // Current item cannot be included as it exceeds current capacity.
-                    dp[i][w] = dp[i - 1][w];
-            }
-        }
-
-        // Backtrack through the dynamic programming table to find selected items.
-        int w = capacity;
-        for (int i = n; i > 0 && w > 0; i--) {
-            if (dp[i][w] != dp[i - 1][w]) {
-                // This item was included in the optimal solution.
-                selectedItems.add(i);
-                w = w - weights[i - 1];
-            }
-        }
-
-        // Record the end time for performance measurement.
+        // Initialize the ant colony optimization parameters.
+        AntColonyOptimizer aco1 = new AntColonyOptimizer(values, weights, request.getAlpha(), request.getBeta(), request.getEvRate(), capacity);
+        aco1.optimize(request.getMaxIter(), request.getNoAnts());
         long endTime = System.nanoTime();
+        List<Integer> selectedIndexes = aco1.getBestSolution();
+        int maxValue=0;
+        // Backtrack to find the selected items.
+        List<Integer> selectedItems = new ArrayList<>();
+        for (int temp : selectedIndexes) {
+            maxValue += values[temp];
+            temp++;
+            selectedItems.add(temp);
+        }
+
+
         System.gc();
         try {
             Thread.sleep(100);
@@ -282,12 +258,13 @@ public class KnapsackController {
         MemoryUsage afterMemoryUse = memoryBean.getHeapMemoryUsage();
         long afterUsedMemory = afterMemoryUse.getUsed();
         long memoryUsedByAlgorithm = afterUsedMemory - beforeUsedMemory;
+        Collections.sort(selectedItems);
         // Prepare the result map to return.
         Map<String, Object> result = new HashMap<>();
-        result.put("maxValue", dp[n][capacity]);            // Maximum possible value for given items and capacity.
-        result.put("selectedItems", selectedItems);         // List of selected items' indices.
-        result.put("exeTime", (endTime - startTime));       // Time taken to compute the solution.
-        result.put("memoryUsed",memoryUsedByAlgorithm);     // Memory used by the algorithm
+        result.put("maxValue", maxValue);           // Maximum possible value for given items and capacity.
+        result.put("selectedItems",selectedItems.reversed());          // List of selected items' indices.
+        result.put("exeTime", (endTime - startTime));        // Time taken to compute the solution.
+        result.put("memoryUsed", memoryUsedByAlgorithm);     // Memory used by the algorithm
 
         return result;
     }
@@ -327,7 +304,7 @@ public class KnapsackController {
                 if ((i & (1 << j)) > 0) {
                     totalWeight += weights[j];
                     totalValue += values[j];
-                    selectedItems.add(j);
+                    selectedItems.add(j+1);
                 }
             }
 
@@ -353,7 +330,7 @@ public class KnapsackController {
         // Prepare the result map to return.
         Map<String, Object> result = new HashMap<>();
         result.put("maxValue", maxValue);                  // Maximum possible value for given items and capacity.
-        result.put("selectedItems", bestItems);            // List of selected items' indices.
+        result.put("selectedItems", bestItems.reversed());            // List of selected items' indices.
         result.put("exeTime", (endTime - startTime));      // Time taken to compute the solution.
         result.put("memoryUsed", memoryUsedByAlgorithm);   // Memory used by the algorithm
 
@@ -570,7 +547,7 @@ public class KnapsackController {
             if (finalPath[i])
             {
                 System.out.print("i");
-                bestItems.add(i);
+                bestItems.add(i+1);
             }
         }
         System.out.println("\nMaximum profit"
@@ -588,7 +565,7 @@ public class KnapsackController {
         // Prepare the result map to return.
         Map<String, Object> result = new HashMap<>();
         result.put("maxValue", (-finalLB));                  // Maximum possible value for given items and capacity.
-        result.put("selectedItems", bestItems);            // List of selected items' indices.
+        result.put("selectedItems", bestItems.reversed());            // List of selected items' indices.
         result.put("exeTime", (endTime - startTime));      // Time taken to compute the solution.
         result.put("memoryUsed", memoryUsedByAlgorithm);   // Memory used by the algorithm
 

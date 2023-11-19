@@ -33,6 +33,15 @@ function KnapsackInput() {
     const [genaResults, setGenaResults] = useState(null);
     const [bnbResults, setBnbResults] = useState(null);
     const [acoResults, setAcoResults] = useState(null);
+    const [acoAlpha, setAcoAlpha] = useState(1);
+    const [acoBeta, setAcoBeta] = useState(1);
+    const [acoEvRate, setAcoEvRate] = useState(0.5);
+    const [acoMaxIter, setAcoMaxIter] = useState(100);
+    const [acoNoAnts, setAcoNoAnts] = useState(100);
+    const [genaPopSize, setGenaPopSize] = useState(100);
+    const [genaMaxGen, setGenaMaxGen] = useState(100);
+    const [genaCrossRate, setGenaCrossRate] = useState(0.7);
+    const [genaMutRate, setGenaMutRate] = useState(0.01);
     const results = {
         "Dynamic Programming": dpResults,
         "Greedy Algorithm": graResults,
@@ -226,6 +235,25 @@ function KnapsackInput() {
             weights: weights,
             capacity: capacity
         };
+        const ACOdata = {
+            values: values,
+            weights: weights,
+            capacity: capacity,
+            alpha: acoAlpha,
+            beta: acoBeta,
+            evRate: acoEvRate,
+            maxIter: acoMaxIter,
+            noAnts: acoNoAnts
+        }
+        const GenaData = {
+            values: values,
+            weights: weights,
+            capacity: capacity,
+            popSize: genaPopSize,
+            maxGen: genaMaxGen,
+            crossRate: genaCrossRate,
+            mutRate: genaMutRate,
+        }
         const algorithms = [
             {name: "Dynamic Programming", endpoint: 'dp', setResult: setDpResults},
             {name: "Brute Force Algorithm", endpoint: 'bf', setResult: setBfResults},
@@ -243,7 +271,14 @@ function KnapsackInput() {
                 console.log(`${algorithm.name} is selected.`);
 
                 try {
-                    const response = await axios.post(`http://localhost:8080/knapsack01/${algorithm.endpoint}`, data);
+                    let response;
+                    if (algorithm.name === 'Ant Colony Optimization Algorithm') {
+                        response = await axios.post(`http://localhost:8080/knapsack01/${algorithm.endpoint}`, ACOdata);
+                    } else if (algorithm.name === 'Genetic Algorithm') {
+                        response = await axios.post(`http://localhost:8080/knapsack01/${algorithm.endpoint}`, GenaData);
+                    } else {
+                        response = await axios.post(`http://localhost:8080/knapsack01/${algorithm.endpoint}`, data);
+                    }
                     console.log(`${algorithm.name} Results:`, response.data);
                     const reversedItems = [...response.data.selectedItems].reverse();
                     algorithm.setResult({
@@ -435,6 +470,89 @@ function KnapsackInput() {
                                         </div>
                                     ))}
                                 </div>
+                                <p><b>Ant colony optimization parameters</b></p>
+                                <label style={{width:'200px',height:'25px',float:'left'}}>Pheromone weight</label>
+                                <input
+                                    className="custom-input"
+                                    type="number"
+                                    value={acoAlpha}
+                                    onChange={e => setAcoAlpha(e.target.value)}
+                                    placeholder="ACO alpha"
+                                    style={{width:'100px',float:'right',height:'25px'}}
+                                />
+                                <label style={{width:'200px',height:'25px',float:'left'}}>Heuristic weight</label>
+                                <input
+                                    className="custom-input"
+                                    type="number"
+                                    value={acoBeta}
+                                    onChange={e => setAcoBeta(e.target.value)}
+                                    placeholder="ACO beta"
+                                    style={{width:'100px',float:'right',height:'25px'}}
+                                />
+                                <label style={{width:'200px',height:'25px',float:'left'}}>Evaporation rate</label>
+                                <input
+                                    className="custom-input"
+                                    type="number"
+                                    value={acoEvRate}
+                                    onChange={e => setAcoEvRate(e.target.value)}
+                                    placeholder="Evaporation rate"
+                                    style={{width:'100px',float:'right',height:'25px'}}
+                                />
+                                <label style={{width:'200px',height:'25px',float:'left'}}>Max iterations</label>
+                                <input
+                                    className="custom-input"
+                                    type="number"
+                                    value={acoMaxIter}
+                                    onChange={e => setAcoMaxIter(e.target.value)}
+                                    placeholder="Max iterations"
+                                    style={{width:'100px',float:'right',height:'25px'}}
+                                />
+                                <label style={{width:'200px',height:'25px',float:'left'}}>Number of ants</label>
+                                <input
+                                    className="custom-input"
+                                    type="number"
+                                    value={acoNoAnts}
+                                    onChange={e => setAcoNoAnts(e.target.value)}
+                                    placeholder="Number of ants"
+                                    style={{width:'100px',float:'right',height:'25px'}}
+                                />
+                                <p><b>Genetic algorithm parameters</b></p>
+                                <label style={{width:'200px',height:'25px',float:'left'}}>Population size</label>
+                                <input
+                                    className="custom-input"
+                                    type="number"
+                                    value={genaPopSize}
+                                    onChange={e => setGenaPopSize(e.target.value)}
+                                    placeholder="Population size"
+                                    style={{width:'100px',float:'right',height:'25px'}}
+                                />
+                                <label style={{width:'200px',height:'25px',float:'left'}}>Max generations</label>
+                                <input
+                                    className="custom-input"
+                                    type="number"
+                                    value={genaMaxGen}
+                                    onChange={e => setGenaMaxGen(e.target.value)}
+                                    placeholder="Max generations"
+                                    style={{width:'100px',float:'right',height:'25px'}}
+                                />
+                                <label style={{width:'200px',height:'25px',float:'left'}}>Crossover rate</label>
+                                <input
+                                    className="custom-input"
+                                    type="number"
+                                    value={genaCrossRate}
+                                    onChange={e => setGenaCrossRate(e.target.value)}
+                                    placeholder="Crossover rate"
+                                    style={{width:'100px',float:'right',height:'25px'}}
+                                />
+                                <label style={{width:'200px',float:'left',height:'25px'}}>Mutation rate</label>
+                                <input
+                                    className="custom-input"
+                                    type="number"
+                                    value={genaMutRate}
+                                    onChange={e => setGenaMutRate(e.target.value)}
+                                    placeholder="Mutation rate"
+                                    style={{width:'100px',float:'right',height:'25px'}}
+                                />
                                 <button onClick={toggleModal2}>Confirm</button>
                             </div>
                         </div>
