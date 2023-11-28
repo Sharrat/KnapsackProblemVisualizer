@@ -37,7 +37,7 @@ public class AntColonyOptimizer {
             this.solutionValue = 0;
         }
 
-        // Construct a solution for one ant
+
         public void constructSolution() {
             this.solution.clear();
             double currentWeight = 0;
@@ -54,7 +54,7 @@ public class AntColonyOptimizer {
     public void initializePheromones() {
         for (int i = 0; i < pheromoneLevels.length; i++) {
             for (int j = 0; j < pheromoneLevels[i].length; j++) {
-                pheromoneLevels[i][j] = 1.0; // initial pheromone level
+                pheromoneLevels[i][j] = 1.0;
             }
         }
     }
@@ -98,26 +98,23 @@ public class AntColonyOptimizer {
         double probabilitySum = 0;
         List<Integer> allowedItems = new ArrayList<>();
 
-        // First, identify the set N of objects that can still be selected
+
         for (int i = 0; i < values.length; i++) {
             if (!currentSolution.contains(i) && (currentWeight + weights[i] <= knapsackCapacity)) {
                 allowedItems.add(i);
             }
         }
 
-        // Calculate the sum of probabilities for all items in set N
         for (int i : allowedItems) {
             double heuristic = values[i] / (weights[i] * knapsackCapacity); // This is the μ_j heuristic
             probabilities[i] = Math.pow(pheromoneLevels[i][i], alpha) * Math.pow(heuristic, beta);
             probabilitySum += probabilities[i];
         }
 
-        // If no items can be added, return -1 indicating no selection is possible
         if (probabilitySum == 0) {
             return -1;
         }
 
-        // Select the next item based on the computed probabilities
         double rand = new Random().nextDouble() * probabilitySum;
         double cumulativeProbability = 0.0;
         for (int i : allowedItems) {
@@ -127,7 +124,7 @@ public class AntColonyOptimizer {
             }
         }
 
-        return -1; // In case no selection occurs due to rounding errors
+        return -1;
     }
 
     private double evaluateSolution(List<Integer> solution) {
@@ -139,19 +136,16 @@ public class AntColonyOptimizer {
     }
 
     private void updatePheromoneLevels(List<Ant> ants, double bestSolutionValue, double avgSolutionValue) {
-        // Evaporate pheromone on all trails
         for (int i = 0; i < pheromoneLevels.length; i++) {
             for (int j = 0; j < pheromoneLevels[i].length; j++) {
                 pheromoneLevels[i][j] *= (1 - evaporationRate);
             }
         }
-
-        // Deposit new pheromones based on the quality of solutions
         for (Ant ant : ants) {
             double deltaTau = calculateDeltaTau(ant.solutionValue, avgSolutionValue, bestSolutionValue);
             for (int item : ant.solution) {
-                // Ensure that the pheromone is deposited on the trails associated with the solution
-                pheromoneLevels[item][item] += deltaTau; // This assumes a simple pheromone model
+
+                pheromoneLevels[item][item] += deltaTau;
             }
         }
     }
