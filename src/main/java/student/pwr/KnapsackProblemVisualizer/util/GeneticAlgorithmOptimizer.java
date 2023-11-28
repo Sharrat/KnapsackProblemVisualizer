@@ -53,9 +53,19 @@ public class GeneticAlgorithmOptimizer {
 
     private List<Integer> generateRandomSolution() {
         List<Integer> solution = new ArrayList<>();
+        int currentWeight = 0;
+
         for (int i = 0; i < numberOfItems; i++) {
-            solution.add(random.nextInt(2)); // 0 or 1 to represent inclusion or exclusion
+            if (currentWeight + weights[i] <= capacity) {
+                // If adding the item doesn't exceed the capacity, include it.
+                solution.add(1);
+                currentWeight += weights[i];
+            } else {
+                // Otherwise, exclude the item.
+                solution.add(0);
+            }
         }
+
         return solution;
     }
 
@@ -112,12 +122,35 @@ public class GeneticAlgorithmOptimizer {
                 mutate(child1);
                 mutate(child2);
 
+                // Check if the children exceed the capacity and adjust them if needed.
+                enforceCapacityConstraint(child1);
+                enforceCapacityConstraint(child2);
+
                 offspring.add(child1);
                 offspring.add(child2);
             }
         }
 
         return offspring;
+    }
+
+    private void enforceCapacityConstraint(List<Integer> solution) {
+        int totalWeight = 0;
+
+        for (int i = 0; i < numberOfItems; i++) {
+            if (solution.get(i) == 1) {
+                totalWeight += weights[i];
+            }
+        }
+
+        while (totalWeight > capacity) {
+            // Randomly select an item to remove until the capacity is satisfied.
+            int indexToRemove = random.nextInt(numberOfItems);
+            if (solution.get(indexToRemove) == 1) {
+                solution.set(indexToRemove, 0);
+                totalWeight -= weights[indexToRemove];
+            }
+        }
     }
 
     private void mutate(List<Integer> solution) {
